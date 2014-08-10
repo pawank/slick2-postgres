@@ -22,7 +22,7 @@ case class Customer(
   dob: LocalDateTime,
   interests: List[String],
   others: Option[JsValue],
-  createdOn:LocalDateTime
+  createdOn:DateTime
 )
 
 trait CustomerComponent extends WithMyDriver{
@@ -41,7 +41,7 @@ trait CustomerComponent extends WithMyDriver{
     def dob = column[LocalDateTime]("dob")
     def interests = column[List[String]]("interests")
     def others = column[Option[JsValue]]("others")
-    def createdOn = column[LocalDateTime]("created_on")
+    def createdOn = column[DateTime]("created_on")
 
     def * = (id, name, email, address, status, active, dob, interests, others, createdOn) <> (Customer.tupled, Customer.unapply)
   }

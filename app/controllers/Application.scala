@@ -36,7 +36,7 @@ object Application extends Controller{
       "dob" -> datetime,
       "interests" -> list(text),
       "others" -> optional(json),
-      "createdOn" -> datetime
+      "createdOn" -> jodaDate("yyyy-MM-dd'T'HH:mm:sssZ")
     )(Customer.apply)(Customer.unapply)
   )
   
