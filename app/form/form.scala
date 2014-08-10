@@ -4,6 +4,10 @@ import play.api.mvc._
 import play.api.data.format.Formatter
 import play.api.data.{FormError, Forms, Mapping}
 
+/**
+* @copyright https://github.com/leon/play-enumeration.git
+*
+*/
 package object form {
 
   /**
