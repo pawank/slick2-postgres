@@ -3,19 +3,21 @@ package models
 import com.vividsolutions.jts.geom.Point
 import org.joda.time.{LocalDateTime,DateTime}
 import play.api.libs.json.JsValue
-import myUtils.WithMyDriver
+import myUtils.{WithMyDriver}
 
-object Status extends scala.Enumeration {
-  type Status = Value
+object AccountStatuses extends Enumeration {
+  type AccountStatus = Value
   val NOT_REGISTERED, REGISTERED = Value
 }
+import AccountStatuses._
+
 case class Address(line1:String, line2:Option[String], city:String)
 case class Customer(
   id: Option[Int] = None,
   name:String,
   email:String,
   address:Address,
-  //status:Status,
+  status:AccountStatus,
   active:Boolean,
   dob: LocalDateTime,
   interests: List[String],
@@ -23,7 +25,7 @@ case class Customer(
   createdOn:LocalDateTime
 )
 
-trait CustomerComponent extends WithMyDriver {
+trait CustomerComponent extends WithMyDriver{
   import driver.simple._
 
   class Customers(tag: Tag) extends Table[Customer](tag, "users") {
@@ -34,13 +36,13 @@ trait CustomerComponent extends WithMyDriver {
     def line2 = column[Option[String]]("line2")
     def city = column[String]("city")
     def address = (line1,line2,city) <> (Address.tupled,Address.unapply)
-    //def status = column[Enumeration]("status")
+    def status = column[AccountStatus]("status",O.Default(NOT_REGISTERED))
     def active = column[Boolean]("active")
     def dob = column[LocalDateTime]("dob")
     def interests = column[List[String]]("interests")
     def others = column[Option[JsValue]]("others")
     def createdOn = column[LocalDateTime]("created_on")
 
-    def * = (id, name, email, address, active, dob, interests, others, createdOn) <> (Customer.tupled, Customer.unapply)
+    def * = (id, name, email, address, status, active, dob, interests, others, createdOn) <> (Customer.tupled, Customer.unapply)
   }
 }

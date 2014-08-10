@@ -21,6 +21,7 @@ object Application extends Controller{
     Ok(views.html.index(data))
   }
 
+  import form.form.enum
   val userForm = Form(
     mapping(
       "id" -> optional(number),
@@ -30,6 +31,7 @@ object Application extends Controller{
       "line1" -> nonEmptyText,
       "line2" -> optional(text),
       "city" -> nonEmptyText)(Address.apply)(Address.unapply),
+      "status" -> enum(AccountStatuses),
       "active" -> boolean,
       "dob" -> datetime,
       "interests" -> list(text),
