@@ -15,6 +15,10 @@ import models.current.dao.driver.simple._
 import org.joda.time._
 
 object Application extends Controller{
+  /**
+  * Use the default session available in `Request` object
+  *
+  */
   def index = DBAction { implicit rs =>
     val data = customers.list
     println(s"Data list: $data")
@@ -22,6 +26,10 @@ object Application extends Controller{
   }
 
 
+  /**
+  * Use another database configured in application.conf as "po" 
+  *
+  */
   def explicitlyUseDb = Action { implicit rs =>
     play.api.db.slick.DB("po").withSession{ implicit session =>
     val data = customers.list
@@ -30,6 +38,10 @@ object Application extends Controller{
     }
   }
 
+  /**
+  * Directly use JDBC postgres driver
+  *
+  */
   def directlyUseDb = Action { implicit rs =>
     import myUtils.MyPostgresDriver._
     scala.slick.jdbc.JdbcBackend.Database.forURL("jdbc:postgresql://localhost/test", driver = "org.postgresql.Driver", user = "test", password = "testtest").withSession{ implicit session =>

@@ -36,6 +36,9 @@ trait CustomerComponent extends WithMyDriver{
     def line2 = column[Option[String]]("line2")
     def city = column[String]("city")
     def address = (line1,line2,city) <> (Address.tupled,Address.unapply)
+    /**
+    * Create the desired ENUM type in db using {{{create type account_status as enum ('NOT_REGISTERED','REGISTERED');}}}
+    */
     def status = column[AccountStatus]("status",O.Default(NOT_REGISTERED))
     def active = column[Boolean]("active")
     def dob = column[LocalDateTime]("dob")
