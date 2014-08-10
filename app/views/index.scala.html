@@ -1,0 +1,30 @@
+@(users: List[Customer])
+
+@main("Users") {
+  <h2>Add customer:</h2>
+
+  <form action="/create" method="POST">
+    <input name="id" type="text" value="1"/>
+    <input name="name" type="text" value="Test"/>
+    <input name="email" type="text" value="test@@gmail.com"/>
+    <input name="address.line1" type="text" value="mflra"/>
+    <input name="address.line2" type="text" value="R T Nagar"/>
+    <input name="address.city" type="text" value="Bangalore"/>
+    <input name="active" type="text" value="true"/>
+    <input name="dob" type="text" value="2014-08-09"/>
+    <input name="interests[0]" type="text" value="Trekking"/>
+    <input name="interests[1]" type="text" value="Programming"/>
+    <input name="others" type="text" value=""/>
+    <input name="createdOn" type="text" value="2014-08-09"/>
+    <input type="submit"/>
+  </form>
+
+  <h2>All customers:</h2>
+  <table>
+    <tr><th>ID</th><th>Name</th><th>Time</th></tr>
+    @for(c <-users){
+    <tr><td>@c.id</td><td>@c.name</td><td>@c.dob</td></tr>
+    }
+  <table/>
+    
+}
