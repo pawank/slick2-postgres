@@ -7,10 +7,11 @@ import myUtils.MyPostgresDriver
 * All tables can be configured here for DAO operations
 *
 */
-class DAO(override val driver: MyPostgresDriver) extends CustomerComponent {
+class DAO(override val driver: MyPostgresDriver) extends CustomerComponent with MyProfileComponent {
   import driver.simple._
 
   val customers = TableQuery(new Customers(_))
+  val myprofiles = TableQuery(new MyProfiles(_))
 }
 
 object current {

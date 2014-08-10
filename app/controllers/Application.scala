@@ -86,4 +86,34 @@ object Application extends Controller{
           })
   }
   
+  val profileForm = Form(
+    mapping(
+      "userId" -> optional(number),
+      "additionalAddress" -> mapping(
+      "line1" -> nonEmptyText,
+      "line2" -> optional(text),
+      "city" -> nonEmptyText)(Address.apply)(Address.unapply),
+      "country" -> nonEmptyText
+    )(MyProfile.apply)(MyProfile.unapply)
+  )
+  
+  def profiles = DBAction { implicit rs =>
+    val data = myprofiles.list
+    println(s"Data list: $data")
+    Ok(views.html.profile(data))
+  }
+  
+  def addProfile = DBAction{ implicit rs =>
+  profileForm.bindFromRequest.fold(
+          errors => {
+            println(s"ERRORS:$errors")
+          Redirect(routes.Application.profiles)
+          },
+          my => {
+    val my = profileForm.bindFromRequest.get
+    println(s"Incoming profile: $my")
+    myprofiles.insert(my)
+    Redirect(routes.Application.profiles)
+          })
+  }
 }
