@@ -4,6 +4,8 @@
 
 # Home page
 GET     /                           controllers.Application.index
+GET     /all                        controllers.Application.explicitlyUseDb
+GET     /directall                    controllers.Application.directlyUseDb
 
 POST    /create                     controllers.Application.insert
 

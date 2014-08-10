@@ -21,6 +21,26 @@ object Application extends Controller{
     Ok(views.html.index(data))
   }
 
+
+  def explicitlyUseDb = Action { implicit rs =>
+    play.api.db.slick.DB("po").withSession{ implicit session =>
+    val data = customers.list
+    println(s"Data list: $data")
+    Ok(views.html.index(data))
+    }
+  }
+
+  def directlyUseDb = Action { implicit rs =>
+    import myUtils.MyPostgresDriver._
+    scala.slick.jdbc.JdbcBackend.Database.forURL("jdbc:postgresql://localhost/test", driver = "org.postgresql.Driver", user = "test", password = "testtest").withSession{ implicit session =>
+    val ids = List(1)
+    val data = customers.filter(_.id inSetBind ids).map(t => t).list
+    println(s"Data list: $data")
+    Ok(views.html.index(data))
+    }
+  }
+
+
   import form.form.enum
   val userForm = Form(
     mapping(
