@@ -16,7 +16,7 @@ description := "slick-pg play 2.3.2"
     //"default" %% "active-slick" % "0.0.1-SNAPSHOT",
     "com.typesafe.play" %% "play-jdbc" % "2.3.2",
     "com.typesafe.play" %% "play-json" % "2.3.2",
-    "com.typesafe.play" %% "play-slick" % "0.8.0-RC2",
+    "com.typesafe.play" %% "play-slick" % "0.8.0",
     "com.github.tminglei" %% "slick-pg" % "0.6.0",
     "com.github.tminglei" %% "slick-pg_joda-time" % "0.6.0",
     "com.github.tminglei" %% "slick-pg_play-json" % "0.6.0",
