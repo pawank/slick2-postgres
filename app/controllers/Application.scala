@@ -103,6 +103,13 @@ object Application extends Controller{
     Ok(views.html.profile(data))
   }
   
+  def profilesQuery = DBAction { implicit rs =>
+    val profileQuery: Query[MyProfiles,MyProfile,Seq] = myprofiles.filter(_.userId inSet(Set(2,3)))
+    val data = profileQuery.run
+    println(s"Data list: $data")
+    Ok(views.html.profile(data.toList))
+  }
+  
   def addProfile = DBAction{ implicit rs =>
   profileForm.bindFromRequest.fold(
           errors => {
