@@ -52,6 +52,22 @@ object Application extends Controller{
     }
   }
 
+  /**
+  * Use AuthenticatedCustomerAction action having db session and customer object extracted from incoming request for querying db
+  *
+  */
+  def usingAuthenticatedCustomerAction = AuthenticatedCustomerAction.async { implicit rs =>
+    import play.api.libs.concurrent.Execution.Implicits._
+    rs.dbSession.withSession{ implicit session =>
+    val ids = List(1)
+    val data = customers.filter(_.id inSetBind ids).map(t => t).list
+    println(s"usingAuthenticatedCustomerAction: Data list: $data")
+    scala.concurrent.Future {
+      Ok(views.html.index(data))
+    }
+    }
+  }
+
 
   import form.form.enum
   val userForm = Form(

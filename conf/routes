@@ -10,6 +10,7 @@ GET     /directall                    controllers.Application.directlyUseDb
 POST    /create                     controllers.Application.insert
 
 GET     /profiles controllers.Application.profiles
+GET     /allprofiles   controllers.Application.usingAuthenticatedCustomerAction
 
 POST    /addprofile                     controllers.Application.addProfile
 
