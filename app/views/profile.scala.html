@@ -8,15 +8,17 @@
     <input name="additionalAddress.line1" type="text" value="mflra"/>
     <input name="additionalAddress.line2" type="text" value="R T Nagar"/>
     <input name="additionalAddress.city" type="text" value="Bangalore"/>
+    <input name="admin.adminType" type="text" value="ADMIN"/>
+    <input name="admin.isAdmin" type="text" value="true"/>
     <input name="country" type="text" value="India"/>
     <input type="submit"/>
   </form>
 
   <h2>Profiles:</h2>
   <table>
-    <tr><th>UID</th><th>Address</th><th>Country</th></tr>
+    <tr><th>UID</th><th>Address</th><th>Is Admin?</th><th>Country</th></tr>
     @for(c <-users){
-    <tr><td>@c.userId</td><td>@c.additionalAddress.line1</td><td>@c.country</td></tr>
+    <tr><td>@c.userId</td><td>@c.additionalAddress.line1</td><td>@c.admin._2</td><td>@c.country</td></tr>
     }
   <table/>
     

@@ -109,6 +109,10 @@ object Application extends Controller{
       "line1" -> nonEmptyText,
       "line2" -> optional(text),
       "city" -> nonEmptyText)(Address.apply)(Address.unapply),
+      "admin" -> mapping(
+        "adminType" -> nonEmptyText,
+        "isAdmin" -> boolean
+      )((a,b) => Pair[String,Boolean](a,b))((x:Pair[String,Boolean]) => Some(x._1,x._2)),
       "country" -> nonEmptyText
     )(MyProfile.apply)(MyProfile.unapply)
   )
