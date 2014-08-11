@@ -11,9 +11,14 @@ object AccountStatuses extends Enumeration {
 }
 import AccountStatuses._
 
+sealed trait Active
+case object Enabled extends Active
+case object Disabled extends Active
+
+
 case class Address(line1:String, line2:Option[String], city:String)
 case class Customer(
-  id: Option[Int] = None,
+  id: Option[Int],
   name:String,
   email:String,
   address:Address,
@@ -22,11 +27,30 @@ case class Customer(
   dob: LocalDateTime,
   interests: List[String],
   others: Option[JsValue],
+  enabled:Active,
   createdOn:DateTime
 )
 
 trait CustomerComponent extends WithMyDriver{
   import driver.simple._
+object ActiveImplicits {
+  implicit val activeTypeMapper = MappedColumnType.base[Active, Boolean](
+      {
+        b => b match {
+        case Enabled => true
+        case Disabled => false
+        }
+      }, 
+      { 
+        i => i match {
+        case true => Enabled
+        case false => Disabled
+        }
+      }
+      )
+
+}
+  import ActiveImplicits._
 
   class Customers(tag: Tag) extends Table[Customer](tag, "users") {
     def id = column[Option[Int]]("id", O.AutoInc, O.PrimaryKey)
@@ -44,8 +68,9 @@ trait CustomerComponent extends WithMyDriver{
     def dob = column[LocalDateTime]("dob")
     def interests = column[List[String]]("interests")
     def others = column[Option[JsValue]]("others")
+    def enabled = column[Active]("enabled")
     def createdOn = column[DateTime]("created_on")
 
-    def * = (id, name, email, address, status, active, dob, interests, others, createdOn) <> (Customer.tupled, Customer.unapply)
+    def * = (id, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
   }
 }

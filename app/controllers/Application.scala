@@ -68,6 +68,34 @@ object Application extends Controller{
     }
   }
 
+  object EnabledMappings {
+  import play.api.data.format.Formatter
+  import play.api.data.Mapping
+  import play.api.data.Forms
+  import play.api.data.FormError
+  import play.api.data.FormError
+
+  implicit val enabledFormat = new Formatter[Active] {
+    private def createErrorMsg(key: String, msg: String) = Left(List(new FormError(key, msg)))
+    def bind(key: String, data: Map[String, String]):Either[Seq[FormError], Active] = {
+      data.get(key).map { value =>
+        try {
+          value match {
+            case "true" => Right(Enabled)
+            case "1" => Right(Enabled)
+            case "True" => Right(Enabled)
+            case _ => Right(Disabled)
+          }
+        } catch {
+          case e: NoSuchElementException => createErrorMsg(key, "Active is not a valid type")
+        }
+      }.getOrElse(createErrorMsg(key, "No `Active` type is provided"))
+    }
+    def unbind(key: String, value: Active) = Map(key -> value.toString)
+  }
+  }
+
+  import EnabledMappings._
 
   import form.form.enum
   val userForm = Form(
@@ -84,6 +112,7 @@ object Application extends Controller{
       "dob" -> datetime,
       "interests" -> list(text),
       "others" -> optional(json),
+      "enabled" -> of[Active],
       "createdOn" -> jodaDate("yyyy-MM-dd'T'HH:mm:sssZ")
     )(Customer.apply)(Customer.unapply)
   )
