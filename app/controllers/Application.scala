@@ -93,6 +93,8 @@ object Application extends Controller{
     }
     def unbind(key: String, value: Active) = Map(key -> value.toString)
   }
+
+    def enabled: Mapping[Active] = Forms.of[Active]
   }
 
   import EnabledMappings._
@@ -112,7 +114,8 @@ object Application extends Controller{
       "dob" -> datetime,
       "interests" -> list(text),
       "others" -> optional(json),
-      "enabled" -> of[Active],
+      //"enabled" -> of[Active],
+      "enabled" -> enabled,
       "createdOn" -> jodaDate("yyyy-MM-dd'T'HH:mm:sssZ")
     )(Customer.apply)(Customer.unapply)
   )
