@@ -115,7 +115,7 @@ object Application extends Controller{
       "interests" -> list(text),
       "others" -> optional(json),
       //"enabled" -> of[Active],
-      "enabled" -> enabled,
+      "enabled" -> enabled, //shortcut for Active type
       "createdOn" -> jodaDate("yyyy-MM-dd'T'HH:mm:sssZ")
     )(Customer.apply)(Customer.unapply)
   )
