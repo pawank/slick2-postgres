@@ -94,10 +94,11 @@ object ActiveImplicits {
   }
 }
 
-trait RoleComponent extends WithMyDriver{
+trait JustRoleComponent extends WithMyDriver{
   import driver.simple._
+  import scala.slick.lifted.{ProvenShape, ForeignKeyQuery}
 
-  class Roles(tag: Tag) extends Table[Role](tag, "roles") {
+  class JustRoles(tag: Tag) extends Table[Role](tag, "just_roles") {
     def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
     def code = column[String]("code")
     def name = column[String]("name")
@@ -105,27 +106,29 @@ trait RoleComponent extends WithMyDriver{
     def isSuperAdmin = column[Option[Boolean]]("is_admin")
     def modelType = column[String]("model_type")
 
-    def * = (id.?,code,name,isAdmin) <> (Role.tupled,Role.unapply)
+    def * :ProvenShape[Role] = (id.?,code,name,isAdmin) <> (Role.tupled,Role.unapply)
   }
 }
 
 trait CustomerRoleComponent extends WithMyDriver{
   import driver.simple._
   import models.current.dao._
+  import scala.slick.lifted.{ProvenShape, ForeignKeyQuery}
 
   type CustomerToRoleType = Tuple2[Int,Int]
   class CustomeToRole(tag:Tag) extends Table[CustomerToRoleType](tag,"customers_roles") {
     def userId = column[Int]("user_id")
     def roleId = column[Int]("role_id")
-    def * = (userId,roleId)
-    def userIdFK = foreignKey("fk_user_id", userId, customers)(a => a.id)
-    def roleIdFK = foreignKey("fk_role_id", roleId, roles)(a => a.id)
+    def * : ProvenShape[CustomerToRoleType] = (userId,roleId)
+    def userIdFK:ForeignKeyQuery[Customers,Customer] = foreignKey("fk_user_id", userId, customers)(a => a.id)
+    def roleIdFK:ForeignKeyQuery[JustRoles,Role] = foreignKey("fk_role_id", roleId, justroles)(a => a.id)
   }
 }
-/*
-trait RoleTypeComponent extends WithMyDriver{
+
+trait RoleComponent extends WithMyDriver{
   import driver.simple._
   import models.current.dao._
+  import scala.slick.lifted.{Query, ProvenShape, ForeignKeyQuery}
 
   class Roles(tag: Tag) extends Table[BaseRole](tag, "roles") {
     def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -135,10 +138,11 @@ trait RoleTypeComponent extends WithMyDriver{
     def isSuperAdmin = column[Option[Boolean]]("is_admin")
     def modelType = column[String]("model_type")
 
-    def * = (id,code,name,isAdmin,isSuperAdmin,modelType).shaped <> ({ t => t match {
-        case (a,b,c,d,x @ Some(true),y @ "SuperAdmin") => SuperAdmin
-        case (a:Int,b:String,c:String,d @ true,x @ None,y @ "AdminRole") => Admin(a,b,c)
-        case (a:Int,b:String,c:String,d:Boolean,x @ None,y @ "Role") => Role(a,b,c,d)
+    def * :ProvenShape[BaseRole] = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> ({ t => t match {
+        case (a:Option[Int],b,c,d,x @ Some(true),y @ "SuperAdmin") => SuperAdmin:BaseRole
+        case (a:Option[Int],b,c,d @ true,x @ None,y @ "AdminRole") => Admin(a,b,c):BaseRole
+        case (a:Option[Int],b,c,d:Boolean,x @ None,y @ "Role") => Role(a,b,c,d):BaseRole
+        case (a:Option[Int],b,c,d:Boolean,_,_) => Role(a,b,c,d):BaseRole
       }
     },
     {t:BaseRole => t match {
@@ -149,5 +153,6 @@ trait RoleTypeComponent extends WithMyDriver{
     }
     )
   }
+
+  val roles = TableQuery[Roles]
 }
-*/

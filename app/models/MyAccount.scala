@@ -17,6 +17,8 @@ case class Pair[A, B](_1: A, _2: B)
 trait MyProfileComponent extends WithMyDriver{
   import driver.simple._
 
+  import scala.slick.lifted.{ProvenShape, ForeignKeyQuery}
+
   /**
   * Creating a custom class as type to be used in slick
   * More info: http://slick.typesafe.com/doc/2.1.0-M2/userdefined.html
@@ -45,7 +47,7 @@ implicit def pairShape[Level <: ShapeLevel, M1, M2, U1, U2, P1, P2](
       def isAdmin = column[Boolean]("is_admin")
       def country = column[String]("country")
       import models.current.dao._
-      def customer = foreignKey("fk_user_id", userId, customers)(_.id)
+      def customer:ForeignKeyQuery[Customers,Customer] = foreignKey("fk_user_id", userId, TableQuery[Customers])(_.id)
 
     def * = (
       userId,
