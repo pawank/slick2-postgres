@@ -16,12 +16,12 @@ case object Enabled extends Active
 case object Disabled extends Active
 
 sealed trait BaseRole {
-  def id:Int
+  def id:Option[Int]
   def code:String
   def name:String
 }
 case object SuperAdmin extends BaseRole {
-  val id = 1
+  val id = Some(1)
   val code = "Super"
   val name = "SuperAdmin"
   val isAdmin = true
@@ -31,13 +31,13 @@ trait WithAdminRole {
   final val isAdmin:Boolean = true
 }
 
-case class Role(val id:Int, val code:String, name:String, isAdmin:Boolean = false) extends BaseRole
-case class Admin(val id:Int, val code:String, name:String) extends BaseRole with WithAdminRole
+case class Role(val id:Option[Int], val code:String, name:String, isAdmin:Boolean = false) extends BaseRole
+case class Admin(val id:Option[Int], val code:String, name:String) extends BaseRole with WithAdminRole
 
 
 case class Address(line1:String, line2:Option[String], city:String)
 case class Customer(
-  id: Int,
+  id:Option[Int],
   name:String,
   email:String,
   address:Address,
@@ -90,7 +90,7 @@ object ActiveImplicits {
     def enabled = column[Active]("enabled")
     def createdOn = column[DateTime]("created_on")
 
-    def * = (id, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
+    def * = (id.?, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
   }
 }
 
@@ -105,7 +105,7 @@ trait RoleComponent extends WithMyDriver{
     def isSuperAdmin = column[Option[Boolean]]("is_admin")
     def modelType = column[String]("model_type")
 
-    def * = (id,code,name,isAdmin) <> (Role.tupled,Role.unapply)
+    def * = (id.?,code,name,isAdmin) <> (Role.tupled,Role.unapply)
   }
 }
 
