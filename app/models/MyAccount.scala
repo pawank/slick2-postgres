@@ -1,6 +1,5 @@
 package models
 
-import com.vividsolutions.jts.geom.Point
 import org.joda.time.{LocalDateTime,DateTime}
 import play.api.libs.json.JsValue
 import myUtils.{WithMyDriver}

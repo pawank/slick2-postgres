@@ -102,7 +102,7 @@ object Application extends Controller{
   import form.form.enum
   val userForm = Form(
     mapping(
-      "id" -> optional(number),
+      "id" -> number,
       "name" -> nonEmptyText,
       "email" -> email,
       "address" -> mapping(
