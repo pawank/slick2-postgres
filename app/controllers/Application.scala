@@ -23,7 +23,7 @@ object Application extends Controller{
     //val data = customers.query.list
     val data = customers.list
     println(s"Data list: $data")
-    //println(s"No of customers: ${customers.count}")
+    //println(s"No of customers: ${customers.query.count}")
     Ok(views.html.index(data))
   }
 

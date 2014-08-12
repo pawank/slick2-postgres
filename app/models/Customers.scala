@@ -97,8 +97,7 @@ object ActiveImplicits {
 }
   import ActiveImplicits._
 
-  //class Customers(tag: Tag) extends Table[Customer](tag, "users") with TableBase[Customer] with CRUD[Customer,Customers]{
-  class AbstractCustomers(tag: Tag) extends Table[Customer](tag, "users") with TableBase[Customer] {
+  class Customers(tag: Tag) extends Table[Customer](tag, "users") with TableBase[Customer] {
     def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
     def name = column[String]("name")
     def email = column[String]("email")
@@ -118,13 +117,6 @@ object ActiveImplicits {
     def createdOn = column[DateTime]("created_on")
 
     def * = (id.?, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
-
-    //final val query = TableQuery[Customers]
-  }
-
-  class Customers(tag:Tag) extends AbstractCustomers(tag)
-  class CustomersModel extends CRUD[Customer,Customers] {
-    final val query = TableQuery[Customers]
   }
 }
 

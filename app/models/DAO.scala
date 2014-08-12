@@ -9,9 +9,9 @@ import scala.slick.lifted.{Query, ProvenShape, ForeignKeyQuery}
 * All tables can be configured here for DAO operations
 *
 */
-class DAO(override val driver: MyPostgresDriver) extends CustomerComponent with MyProfileComponent with RoleComponent with CustomerRoleComponent with JustRoleComponent {
+class DAO(override val driver: MyPostgresDriver) extends JustRoleComponent with MyProfileComponent with CustomerRoleComponent with RoleComponent with CustomerComponent {
   import driver.simple._
-  //object customers extends CustomersModel
+  //object customersobject extends CustomersModel
   object customers extends TableQuery(new Customers(_))
   //val customers = TableQuery(new Customers(_))
   //val myprofiles = TableQuery(new MyProfiles(_))
