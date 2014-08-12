@@ -5,6 +5,17 @@ import org.joda.time.{LocalDateTime,DateTime}
 import play.api.libs.json.JsValue
 import myUtils.{WithMyDriver}
 
+import myUtils.MyPostgresDriver.simple._
+
+trait Entity {
+  def id: Option[Int]
+}
+
+trait TableBase[E] extends Table[E]{
+  def id: Column[Int]
+  def quickInfo: Column[Option[String]] = column[Option[String]]("quick_info")
+}
+
 object AccountStatuses extends Enumeration {
   type AccountStatus = Value
   val NOT_REGISTERED, REGISTERED = Value
@@ -15,8 +26,7 @@ sealed trait Active
 case object Enabled extends Active
 case object Disabled extends Active
 
-sealed trait BaseRole {
-  def id:Option[Int]
+sealed trait BaseRole extends Entity{
   def code:String
   def name:String
 }
@@ -48,10 +58,26 @@ case class Customer(
   others: Option[JsValue],
   enabled:Active,
   createdOn:DateTime
-)
+) extends Entity
 
-trait CustomerComponent extends WithMyDriver{
-  import driver.simple._
+trait CRUD[E <: Entity,T <: TableBase[E]] {
+  def query: TableQuery[T]
+  private val byIdCompiled = Compiled{ (id: Column[Int]) => query.filter(_.id === id) }
+  def findById(id: Int)(implicit s: Session): Option[E] = byIdCompiled(id).firstOption
+  def update(entity: E)(implicit s: Session): Unit      = entity.id.map{ id =>
+    byIdCompiled(id).update(entity)
+  }.getOrElse{
+    throw new Exception("cannot update entity without id")
+  }
+  def delete(id: Int)(implicit s: Session): Unit        = byIdCompiled(id).delete
+
+  private lazy val insertInvoker = query.insertInvoker
+  def insert(entity: E)(implicit s: Session): Unit = insertInvoker.insert(entity)
+  def count(implicit s: Session): Int = query.length.run
+}
+
+trait CustomerComponent {
+  //import driver.simple._
 object ActiveImplicits {
   implicit val activeTypeMapper = MappedColumnType.base[Active, Boolean](
       {
@@ -71,7 +97,8 @@ object ActiveImplicits {
 }
   import ActiveImplicits._
 
-  class Customers(tag: Tag) extends Table[Customer](tag, "users") {
+  //class Customers(tag: Tag) extends Table[Customer](tag, "users") with TableBase[Customer] with CRUD[Customer,Customers]{
+  class AbstractCustomers(tag: Tag) extends Table[Customer](tag, "users") with TableBase[Customer] {
     def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
     def name = column[String]("name")
     def email = column[String]("email")
@@ -91,6 +118,13 @@ object ActiveImplicits {
     def createdOn = column[DateTime]("created_on")
 
     def * = (id.?, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
+
+    //final val query = TableQuery[Customers]
+  }
+
+  class Customers(tag:Tag) extends AbstractCustomers(tag)
+  class CustomersModel extends CRUD[Customer,Customers] {
+    final val query = TableQuery[Customers]
   }
 }
 
@@ -120,7 +154,7 @@ trait CustomerRoleComponent extends WithMyDriver{
     def userId = column[Int]("user_id")
     def roleId = column[Int]("role_id")
     def * : ProvenShape[CustomerToRoleType] = (userId,roleId)
-    def userIdFK:ForeignKeyQuery[Customers,Customer] = foreignKey("fk_user_id", userId, customers)(a => a.id)
+    def userIdFK:ForeignKeyQuery[Customers,Customer] = foreignKey("fk_user_id", userId, TableQuery[Customers])(a => a.id)
     def roleIdFK:ForeignKeyQuery[JustRoles,Role] = foreignKey("fk_role_id", roleId, justroles)(a => a.id)
   }
 }

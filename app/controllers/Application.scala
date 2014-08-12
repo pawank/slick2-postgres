@@ -20,8 +20,10 @@ object Application extends Controller{
   *
   */
   def index = DBAction { implicit rs =>
+    //val data = customers.query.list
     val data = customers.list
     println(s"Data list: $data")
+    //println(s"No of customers: ${customers.count}")
     Ok(views.html.index(data))
   }
 
@@ -32,6 +34,7 @@ object Application extends Controller{
   */
   def explicitlyUseDb = Action { implicit rs =>
     play.api.db.slick.DB("po").withSession{ implicit session =>
+    //val data = customers.query.list
     val data = customers.list
     println(s"Data list: $data")
     Ok(views.html.index(data))
@@ -46,6 +49,7 @@ object Application extends Controller{
     import myUtils.MyPostgresDriver._
     scala.slick.jdbc.JdbcBackend.Database.forURL("jdbc:postgresql://localhost/test", driver = "org.postgresql.Driver", user = "test", password = "testtest").withSession{ implicit session =>
     val ids = List(1)
+    //val data = customers.query.filter(_.id inSetBind ids).map(t => t).list
     val data = customers.filter(_.id inSetBind ids).map(t => t).list
     println(s"Data list: $data")
     Ok(views.html.index(data))
@@ -60,6 +64,7 @@ object Application extends Controller{
     import play.api.libs.concurrent.Execution.Implicits._
     rs.dbSession.withSession{ implicit session =>
     val ids = List(1)
+    //val data = customers.query.filter(_.id inSetBind ids).map(t => t).list
     val data = customers.filter(_.id inSetBind ids).map(t => t).list
     println(s"usingAuthenticatedCustomerAction: Data list: $data")
     scala.concurrent.Future {
