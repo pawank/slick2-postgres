@@ -3,17 +3,51 @@ package models
 import com.vividsolutions.jts.geom.Point
 import org.joda.time.{LocalDateTime,DateTime}
 import play.api.libs.json.JsValue
-import myUtils.{WithMyDriver}
 
+import myUtils.{WithMyDriver}
 import myUtils.MyPostgresDriver.simple._
 
-trait Entity {
-  def id: Option[Int]
+trait Entity[PK] {
+  def id: Option[PK]
 }
 
-trait TableBase[E] extends Table[E]{
-  def id: Column[Int]
-  def quickInfo: Column[Option[String]] = column[Option[String]]("quick_info")
+trait EntityTable[I] {
+  def id: scala.slick.lifted.Column[I]
+}
+
+trait Profile extends WithMyDriver {
+  //val profile: scala.slick.driver.JdbcProfile
+  val profile:scala.slick.driver.PostgresDriver
+  val simple:profile.simple.type = profile.simple
+}
+
+//trait CrudComponent {this:Profile => 
+//  import simple._
+trait CrudComponent extends WithMyDriver{
+  import driver.simple._
+
+    abstract class Crud[T <: Table[E] with EntityTable[PK], E <: Entity[PK], PK: BaseColumnType](implicit session: Session) {
+      val query: TableQuery[T]
+        def count: Int = query.length.run
+        def findAll: List[E] = query.list
+        def queryById(id: PK) = query.filter(_.id === id)
+        def findOne(id: PK): Option[E] = queryById(id).firstOption
+                             def add(m: E): PK = (query returning query.map(_.id)) += m
+                                            def withId(model: E, id: PK): E
+                                                                          def extractId(m: E): Option[PK] = m.id
+                                                                                               def save(m: E): E = extractId(m) match {
+                                                                                                 case Some(id) =>
+                                                                                                   queryById(id).update(m)
+                                                                                                   m
+                                                                                                   case None => withId(m, add(m))
+                                                                                               }
+      def saveAll(ms: E*): Option[Int] = query ++= ms
+                           def deleteById(id: PK): Int = queryById(id).delete
+                                                   def delete(m: E): Int = extractId(m) match {
+                                                     case Some(id) => deleteById(id)
+                                                       case None => 0
+                                                   }
+    }
 }
 
 object AccountStatuses extends Enumeration {
@@ -26,7 +60,7 @@ sealed trait Active
 case object Enabled extends Active
 case object Disabled extends Active
 
-sealed trait BaseRole extends Entity{
+sealed trait BaseRole extends Entity[Int]{
   def code:String
   def name:String
 }
@@ -58,8 +92,9 @@ case class Customer(
   others: Option[JsValue],
   enabled:Active,
   createdOn:DateTime
-) extends Entity
+) extends Entity[Int]
 
+/*
 trait CRUD[E <: Entity,T <: TableBase[E]] {
   def query: TableQuery[T]
   private val byIdCompiled = Compiled{ (id: Column[Int]) => query.filter(_.id === id) }
@@ -74,10 +109,15 @@ trait CRUD[E <: Entity,T <: TableBase[E]] {
   private lazy val insertInvoker = query.insertInvoker
   def insert(entity: E)(implicit s: Session): Unit = insertInvoker.insert(entity)
   def count(implicit s: Session): Int = query.length.run
-}
+}*/
 
-trait CustomerComponent {
-  //import driver.simple._
+
+//trait CustomerComponent extends CrudComponent {outer:Profile =>
+//  import simple._
+//trait CustomerComponent extends WithMyDriver{
+//  import driver.simple._
+trait CustomerComponent extends CrudComponent{
+  import driver.simple._
 object ActiveImplicits {
   implicit val activeTypeMapper = MappedColumnType.base[Active, Boolean](
       {
@@ -97,7 +137,7 @@ object ActiveImplicits {
 }
   import ActiveImplicits._
 
-  class Customers(tag: Tag) extends Table[Customer](tag, "users") with TableBase[Customer] {
+  class Customers(tag: Tag) extends Table[Customer](tag, "users") with EntityTable[Int] {
     def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
     def name = column[String]("name")
     def email = column[String]("email")
@@ -118,6 +158,12 @@ object ActiveImplicits {
 
     def * = (id.?, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
   }
+
+  /*
+  class Customers(implicit session: Session) extends Crud[CustomersTable, Customer, Int] {
+    val query = TableQuery[CustomersTable]
+    override def withId(user: Customer, id: Int): Customer = user.copy(id = Option(id))
+  }*/
 }
 
 trait JustRoleComponent extends WithMyDriver{
@@ -147,6 +193,8 @@ trait CustomerRoleComponent extends WithMyDriver{
     def roleId = column[Int]("role_id")
     def * : ProvenShape[CustomerToRoleType] = (userId,roleId)
     def userIdFK:ForeignKeyQuery[Customers,Customer] = foreignKey("fk_user_id", userId, TableQuery[Customers])(a => a.id)
+    //def roleIdFK:ForeignKeyQuery[JustRoles,Role] = foreignKey("fk_role_id", roleId, justroles)(a => a.id)
+    //def userIdFK:ForeignKeyQuery[CustomersTable,Customer] = foreignKey("fk_user_id", userId, TableQuery[CustomersTable])(a => a.id)
     def roleIdFK:ForeignKeyQuery[JustRoles,Role] = foreignKey("fk_role_id", roleId, justroles)(a => a.id)
   }
 }
