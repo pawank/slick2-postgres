@@ -12,6 +12,9 @@ POST    /create                     controllers.Application.insert
 GET     /profiles controllers.Application.profiles
 GET     /allprofiles   controllers.Application.usingAuthenticatedCustomerAction
 
+POST     /addrole          controllers.Application.addRole
+GET     /roles   controllers.Application.roleslist
+
 POST    /addprofile                     controllers.Application.addProfile
 
 # Map static resources from the /public folder to the /assets URL path

@@ -1,0 +1,24 @@
+@(roles: List[BaseRole])
+
+@main("Roles") {
+  <h2>My Role:</h2>
+
+  <form action="/addrole" method="POST">
+    <input name="id" type="text" value="0"/>
+    <input name="code" type="text" value=""/>
+    <input name="name" type="text" value="Role "/>
+    <input name="isAdmin" type="text" value="false"/>
+    <input name="isSuperAdmin" type="text" value="false"/>
+    <input name="modelType" type="text" value="Role"/>(Role, Admin)
+    <input type="submit"/>
+  </form>
+
+  <h2>Roles:</h2>
+  <table>
+    <tr><th>UID</th><th>Code</th><th>Is Admin?</th><th>Is SuperAdmin?</th><th>Model</th></tr>
+    @for(c <- roles){
+    <tr><td>@c.id</td><td>@c.code</td><td>@c.isAdmin</td><td>@c.isSuperAdmin</td><td>@c.modelType</td></tr>
+    }
+  <table/>
+    
+}

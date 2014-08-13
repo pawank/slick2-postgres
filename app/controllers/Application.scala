@@ -178,4 +178,36 @@ object Application extends Controller{
     Redirect(routes.Application.profiles)
           })
   }
+  
+  val roleForm = Form(
+    mapping(
+      "id" -> optional(number),
+      "code" -> nonEmptyText,
+      "name" -> nonEmptyText,
+      "isAdmin" -> boolean,
+      "isSuperAdmin" -> optional(boolean),
+      "modelType" -> nonEmptyText
+    )(Role.apply)(Role.unapply)
+  )
+  
+  def roleslist = DBAction { implicit rs =>
+    val data = baseroles.list
+    println(s"Data list: $data")
+    baseroles.insert(Role(code = "test", name = "test", isAdmin = false, isSuperAdmin = None, modelType = "Role"))
+    Ok(views.html.role(data))
+  }
+  
+  def addRole = DBAction{ implicit rs =>
+  roleForm.bindFromRequest.fold(
+          errors => {
+            println(s"ERRORS:$errors")
+          Redirect(routes.Application.roleslist)
+          },
+          my => {
+    val my = roleForm.bindFromRequest.get
+    println(s"Incoming role: $my")
+    //baseroles.insert(my)
+    Redirect(routes.Application.roleslist)
+          })
+  }
 }
