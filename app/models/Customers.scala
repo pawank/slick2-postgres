@@ -21,32 +21,37 @@ trait Profile extends WithMyDriver {
   val simple:profile.simple.type = profile.simple
 }
 
-//trait CrudComponent {this:Profile => 
-//  import simple._
 trait CrudComponent extends WithMyDriver{
   import driver.simple._
 
-    abstract class Crud[T <: Table[E] with EntityTable[PK], E <: Entity[PK], PK: BaseColumnType](implicit session: Session) {
+    abstract class Crud[T <: Table[E] with EntityTable[PK], E <: Entity[PK], PK: BaseColumnType] {
       val query: TableQuery[T]
-        def count: Int = query.length.run
-        def findAll: List[E] = query.list
-        def queryById(id: PK) = query.filter(_.id === id)
-        def findOne(id: PK): Option[E] = queryById(id).firstOption
-                             def add(m: E): PK = (query returning query.map(_.id)) += m
-                                            def withId(model: E, id: PK): E
-                                                                          def extractId(m: E): Option[PK] = m.id
-                                                                                               def save(m: E): E = extractId(m) match {
-                                                                                                 case Some(id) =>
-                                                                                                   queryById(id).update(m)
-                                                                                                   m
-                                                                                                   case None => withId(m, add(m))
-                                                                                               }
-      def saveAll(ms: E*): Option[Int] = query ++= ms
-                           def deleteById(id: PK): Int = queryById(id).delete
-                                                   def delete(m: E): Int = extractId(m) match {
-                                                     case Some(id) => deleteById(id)
-                                                       case None => 0
-                                                   }
+        private val byIdCompiled = Compiled{ (id: Column[PK]) => query.filter(_.id === id) }
+        def count(implicit s: Session): Int = query.length.run
+        def findAll(implicit s: Session): List[E] = query.list
+        def queryById(id: PK)(implicit s: Session) = byIdCompiled(id)
+        def findById(id: PK)(implicit s: Session): Option[E] = byIdCompiled(id).firstOption
+        def findOne(id: PK)(implicit s: Session): Option[E] = queryById(id).firstOption
+        def add(m: E)(implicit s: Session): PK = (query returning query.map(_.id)) += m
+        def withId(model: E, id: PK)(implicit s: Session): E
+        def extractId(m: E)(implicit s: Session): Option[PK] = m.id
+        def save(m: E)(implicit s: Session): E = extractId(m) match {
+          case Some(id) =>
+            queryById(id).update(m)
+            m
+            case None => withId(m, add(m))
+        }
+        def saveAll(ms: E*)(implicit s: Session): Option[Int] = query ++= ms
+        def deleteById(id: PK)(implicit s: Session): Int = queryById(id).delete
+        def delete(m: E)(implicit s: Session): Int = extractId(m) match {
+          case Some(id) => deleteById(id)
+          case None => -1
+        }
+        def update(entity: E)(implicit s: Session): Unit      = entity.id.map{ id =>
+              byIdCompiled(id).update(entity)
+        }.getOrElse{
+              throw new Exception("cannot update entity without id")
+        }
     }
 }
 
@@ -94,28 +99,6 @@ case class Customer(
   createdOn:DateTime
 ) extends Entity[Int]
 
-/*
-trait CRUD[E <: Entity,T <: TableBase[E]] {
-  def query: TableQuery[T]
-  private val byIdCompiled = Compiled{ (id: Column[Int]) => query.filter(_.id === id) }
-  def findById(id: Int)(implicit s: Session): Option[E] = byIdCompiled(id).firstOption
-  def update(entity: E)(implicit s: Session): Unit      = entity.id.map{ id =>
-    byIdCompiled(id).update(entity)
-  }.getOrElse{
-    throw new Exception("cannot update entity without id")
-  }
-  def delete(id: Int)(implicit s: Session): Unit        = byIdCompiled(id).delete
-
-  private lazy val insertInvoker = query.insertInvoker
-  def insert(entity: E)(implicit s: Session): Unit = insertInvoker.insert(entity)
-  def count(implicit s: Session): Int = query.length.run
-}*/
-
-
-//trait CustomerComponent extends CrudComponent {outer:Profile =>
-//  import simple._
-//trait CustomerComponent extends WithMyDriver{
-//  import driver.simple._
 trait CustomerComponent extends CrudComponent{
   import driver.simple._
 object ActiveImplicits {
@@ -159,11 +142,10 @@ object ActiveImplicits {
     def * = (id.?, name, email, address, status, active, dob, interests, others, enabled, createdOn) <> (Customer.tupled, Customer.unapply)
   }
 
-  /*
-  class Customers(implicit session: Session) extends Crud[CustomersTable, Customer, Int] {
-    val query = TableQuery[CustomersTable]
-    override def withId(user: Customer, id: Int): Customer = user.copy(id = Option(id))
-  }*/
+  object Customers extends Crud[Customers, Customer, Int] {
+    val query = TableQuery[Customers]
+    override def withId(user: Customer, id: Int)(implicit session: Session): Customer = user.copy(id = Option(id))
+  }
 }
 
 trait JustRoleComponent extends WithMyDriver{
@@ -193,8 +175,6 @@ trait CustomerRoleComponent extends WithMyDriver{
     def roleId = column[Int]("role_id")
     def * : ProvenShape[CustomerToRoleType] = (userId,roleId)
     def userIdFK:ForeignKeyQuery[Customers,Customer] = foreignKey("fk_user_id", userId, TableQuery[Customers])(a => a.id)
-    //def roleIdFK:ForeignKeyQuery[JustRoles,Role] = foreignKey("fk_role_id", roleId, justroles)(a => a.id)
-    //def userIdFK:ForeignKeyQuery[CustomersTable,Customer] = foreignKey("fk_user_id", userId, TableQuery[CustomersTable])(a => a.id)
     def roleIdFK:ForeignKeyQuery[JustRoles,Role] = foreignKey("fk_role_id", roleId, justroles)(a => a.id)
   }
 }
@@ -227,6 +207,4 @@ trait RoleComponent extends WithMyDriver{
     }
     )
   }
-
-  val roles = TableQuery[Roles]
 }
