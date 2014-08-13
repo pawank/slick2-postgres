@@ -183,17 +183,16 @@ trait RoleComponent extends CrudComponent{
   class Roles(tag:Tag) extends AbstractRoles[Role](tag) {
     def *  = (id.?,code,name,isAdmin,isSuperAdmin.?,modelType).shaped <> (Role.tupled, Role.unapply)
   }
-
-  
   object Roles extends Crud[Roles, Role, Int] {
     val query = TableQuery[Roles]
     override def withId(role: Role, id: Int)(implicit session: Session): Role = role.copy(id = Option(id))
   }
-  */
-  
-  /*
   class Admins(tag:Tag) extends AbstractRoles[Admin](tag) {
     def *  = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> (Admin.tupled, Admin.unapply)
+  }
+  object Admins extends Crud[Admins, Admin, Int] {
+    val query = TableQuery[Admins]
+    override def withId(role: Admin, id: Int)(implicit session: Session): Admin = role.copy(id = Option(id))
   }
   class SuperAdmins(tag:Tag) extends AbstractRoles[SuperAdmin](tag) {
     def *  = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> (SuperAdmin.tupled, SuperAdmin.unapply)
@@ -216,14 +215,6 @@ trait RoleComponent extends CrudComponent{
     }
     )
   }
-
- 
-  /*
-  object Admins extends Crud[Admins, Admin, Int] {
-    val query = TableQuery[Admins]
-    override def withId(role: Admin, id: Int)(implicit session: Session): Admin = role.copy(id = Option(id))
-  }
-  */
 
   object BaseRoles extends Crud[BaseRoles, BaseRole, Int] {
     val query = TableQuery[BaseRoles]
