@@ -193,7 +193,7 @@ object Application extends Controller{
   def roleslist = DBAction { implicit rs =>
     val data = baseroles.list
     println(s"Data list: $data")
-    baseroles.insert(Role(code = "test", name = "test", isAdmin = false, isSuperAdmin = None, modelType = "Role"))
+    baseroles.insert(Admin(code = "admin", name = "Admin"))
     Ok(views.html.role(data))
   }
   
@@ -206,7 +206,7 @@ object Application extends Controller{
           my => {
     val my = roleForm.bindFromRequest.get
     println(s"Incoming role: $my")
-    //baseroles.insert(my)
+    baseroles.insert(my)
     Redirect(routes.Application.roleslist)
           })
   }

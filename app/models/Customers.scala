@@ -149,24 +149,6 @@ object ActiveImplicits {
   }
 }
 
-/*
-trait JustRoleComponent extends WithMyDriver{
-  import driver.simple._
-  import scala.slick.lifted.{ProvenShape, ForeignKeyQuery}
-
-  class JustRoles(tag: Tag) extends Table[Role](tag, "just_roles") {
-    def id = column[Int]("id", O.AutoInc, O.PrimaryKey)
-    def code = column[String]("code")
-    def name = column[String]("name")
-    def isAdmin = column[Boolean]("is_admin", O.Default(false))
-    def isSuperAdmin = column[Boolean]("is_admin")
-    def modelType = column[String]("model_type")
-
-    def * :ProvenShape[Role] = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> (Role.tupled,Role.unapply)
-  }
-}
-*/
-
 trait CustomerRoleComponent extends WithMyDriver{
   import driver.simple._
   import models.current.dao._
@@ -192,27 +174,34 @@ trait RoleComponent extends CrudComponent{
     def code = column[String]("code")
     def name = column[String]("name")
     def isAdmin = column[Boolean]("is_admin", O.Default(false))
-    def isSuperAdmin = column[Boolean]("is_admin")
+    def isSuperAdmin = column[Option[Boolean]]("is_super_admin")
     def modelType = column[String]("model_type")
     def * :ProvenShape[T] 
   }
 
   /*
   class Roles(tag:Tag) extends AbstractRoles[Role](tag) {
-    def *  = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> (Role.tupled, Role.unapply)
+    def *  = (id.?,code,name,isAdmin,isSuperAdmin.?,modelType).shaped <> (Role.tupled, Role.unapply)
   }
 
+  
+  object Roles extends Crud[Roles, Role, Int] {
+    val query = TableQuery[Roles]
+    override def withId(role: Role, id: Int)(implicit session: Session): Role = role.copy(id = Option(id))
+  }
+  */
+  
+  /*
   class Admins(tag:Tag) extends AbstractRoles[Admin](tag) {
     def *  = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> (Admin.tupled, Admin.unapply)
   }
-  
   class SuperAdmins(tag:Tag) extends AbstractRoles[SuperAdmin](tag) {
     def *  = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> (SuperAdmin.tupled, SuperAdmin.unapply)
   }
   */
-  
+
   class BaseRoles(tag: Tag) extends AbstractRoles[BaseRole](tag) {
-    def * :ProvenShape[BaseRole] = (id.?,code,name,isAdmin,isSuperAdmin.?,modelType).shaped <> ({ t => t match {
+    def * :ProvenShape[BaseRole] = (id.?,code,name,isAdmin,isSuperAdmin,modelType).shaped <> ({ t => t match {
         case (a:Option[Int],b,c,d,x @ Some(true),y @ SUPER_ADMIN) => SuperAdmin(a,b,c):BaseRole
         case (a:Option[Int],b,c,d @ true,x @ None,y @ ADMIN) => Admin(a,b,c):BaseRole
         case (a:Option[Int],b,c,d,e,f) => Role(a,b,c,d,e,f):BaseRole
@@ -228,12 +217,8 @@ trait RoleComponent extends CrudComponent{
     )
   }
 
-  /*
-  object Roles extends Crud[Roles, Role, Int] {
-    val query = TableQuery[Roles]
-    override def withId(role: Role, id: Int)(implicit session: Session): Role = role.copy(id = Option(id))
-  }
  
+  /*
   object Admins extends Crud[Admins, Admin, Int] {
     val query = TableQuery[Admins]
     override def withId(role: Admin, id: Int)(implicit session: Session): Admin = role.copy(id = Option(id))
